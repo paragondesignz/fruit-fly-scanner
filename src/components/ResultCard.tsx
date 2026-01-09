@@ -122,11 +122,20 @@ export function ResultCard({ data }: ResultCardProps) {
             </p>
             <div className="flex flex-col sm:flex-row gap-3">
               <a
-                href="tel:0800809966"
+                href="https://report.mpi.govt.nz/pest/"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium text-sm transition-colors"
               >
+                <ExternalLink className="w-4 h-4" />
+                Report to MPI
+              </a>
+              <a
+                href="tel:0800809966"
+                className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-white border border-red-300 hover:bg-red-50 text-red-700 rounded-lg font-medium text-sm transition-colors"
+              >
                 <Phone className="w-4 h-4" />
-                Call MPI: 0800 80 99 66
+                Call: 0800 80 99 66
               </a>
               <a
                 href="https://www.mpi.govt.nz/biosecurity/pest-and-disease-threats-to-new-zealand/horticultural-pest-and-disease-threats-to-new-zealand/queensland-fruit-fly"
