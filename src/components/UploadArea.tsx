@@ -1,6 +1,5 @@
-import { useState, useCallback } from 'react'
-import { Upload, X, Camera } from 'lucide-react'
-import { cn } from '../lib/utils'
+import { useState, useCallback, useRef } from 'react'
+import { Upload, X, Bug } from 'lucide-react'
 
 interface UploadAreaProps {
   onImageSelected: (file: File) => void
@@ -11,6 +10,7 @@ interface UploadAreaProps {
 
 export function UploadArea({ onImageSelected, selectedImage, onClear, isLoading }: UploadAreaProps) {
   const [isDragging, setIsDragging] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault()
@@ -36,69 +36,93 @@ export function UploadArea({ onImageSelected, selectedImage, onClear, isLoading 
     if (file) {
       onImageSelected(file)
     }
+    // Reset input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
   }, [onImageSelected])
 
-  if (selectedImage) {
+  // Selected image preview
+  if (selectedImage && !isLoading) {
     return (
-      <div className="relative rounded-2xl overflow-hidden shadow-xl">
-        <img
-          src={selectedImage}
-          alt="Selected"
-          className="w-full h-auto max-h-96 object-contain bg-slate-100"
-        />
-        {!isLoading && (
+      <div className="card-elevated overflow-hidden">
+        <div className="relative">
+          <img
+            src={selectedImage}
+            alt="Selected"
+            className="w-full h-auto max-h-80 object-contain bg-[#0a0f1c]"
+          />
           <button
             onClick={onClear}
-            className="absolute top-3 right-3 p-2 bg-black/50 hover:bg-black/70 rounded-full text-white backdrop-blur-sm transition-colors"
+            className="absolute top-3 right-3 p-2 bg-black/60 hover:bg-black/80 rounded-lg text-white backdrop-blur-sm transition-colors border border-white/10"
             aria-label="Clear image"
           >
             <X className="w-5 h-5" />
           </button>
-        )}
+        </div>
       </div>
     )
   }
 
+  // Upload interface matching hornet-check CameraInterface selection screen
   return (
-    <label
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-      onDrop={handleDrop}
-      className={cn(
-        "flex flex-col items-center justify-center w-full h-64 border-2 border-dashed rounded-2xl cursor-pointer transition-all duration-200",
-        isDragging
-          ? "border-orange-500 bg-orange-50 scale-[1.02]"
-          : "border-slate-300 bg-slate-50 hover:bg-slate-100 hover:border-orange-400"
-      )}
-    >
-      <div className="flex flex-col items-center justify-center pt-5 pb-6 px-4 text-center">
-        <div className={cn(
-          "p-4 rounded-full mb-4 transition-colors",
-          isDragging ? "bg-orange-100" : "bg-slate-200"
-        )}>
-          {isDragging ? (
-            <Upload className="w-8 h-8 text-orange-600" />
-          ) : (
-            <Camera className="w-8 h-8 text-slate-500" />
-          )}
+    <div className="card-elevated p-6 lg:p-8">
+      {/* Header */}
+      <div className="text-center mb-8">
+        <div className="inline-flex items-center justify-center w-14 h-14 rounded-xl bg-[rgba(251,146,60,0.1)] border border-[rgba(251,146,60,0.2)] mb-4">
+          <Bug className="w-7 h-7 text-[#fb923c]" aria-hidden="true" />
         </div>
-
-        <p className="mb-2 text-lg font-semibold text-slate-700">
-          {isDragging ? "Drop your image here" : "Upload a photo"}
-        </p>
-        <p className="text-sm text-slate-500 mb-4">
-          Drag & drop or click to select
-        </p>
-        <p className="text-xs text-slate-400">
-          Supports: JPEG, PNG, WebP (max 20MB)
+        <h2 className="font-display text-xl font-bold text-slate-100 mb-2">
+          Identify Fly
+        </h2>
+        <p className="text-slate-400 text-sm max-w-sm mx-auto">
+          Upload a photo of a fly to check for biosecurity threat species
         </p>
       </div>
-      <input
-        type="file"
-        className="hidden"
-        accept="image/jpeg,image/png,image/webp"
-        onChange={handleFileInput}
-      />
-    </label>
+
+      {/* Upload Area */}
+      <label
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+        className={`group relative flex flex-col items-center justify-center h-40 card-interactive overflow-hidden cursor-pointer border-dashed ${
+          isDragging ? 'border-[#fb923c] bg-[rgba(251,146,60,0.05)]' : ''
+        }`}
+        aria-label="Upload an image"
+      >
+        <div className="w-12 h-12 rounded-xl bg-[#1a2540] border border-slate-700 flex items-center justify-center group-hover:border-[#fb923c] group-hover:bg-[rgba(251,146,60,0.05)] transition-all mb-4">
+          <Upload className={`w-6 h-6 transition-colors ${isDragging ? 'text-[#fb923c]' : 'text-slate-400 group-hover:text-[#fb923c]'}`} aria-hidden="true" />
+        </div>
+        <div className="text-center">
+          <div className={`font-semibold transition-colors ${isDragging ? 'text-[#fb923c]' : 'text-slate-200 group-hover:text-[#fb923c]'}`}>
+            {isDragging ? 'Drop your image here' : 'Tap to upload'}
+          </div>
+          <div className="text-xs text-slate-500 mt-1">
+            Drag & drop or click to select
+          </div>
+        </div>
+
+        <input
+          ref={fileInputRef}
+          type="file"
+          className="hidden"
+          accept="image/jpeg,image/png,image/webp"
+          onChange={handleFileInput}
+          aria-label="Upload image file"
+        />
+      </label>
+
+      {/* Photo Tips */}
+      <div className="mt-6 p-4 rounded-lg bg-[#1a2540] border border-slate-700">
+        <p className="text-xs text-slate-400 leading-relaxed">
+          <span className="text-slate-300 font-medium">Tip:</span> For best results, use a clear, well-lit photo showing the entire fly. Close-up shots of wing patterns and body markings help with identification.
+        </p>
+      </div>
+
+      {/* Supported formats */}
+      <p className="text-xs text-slate-500 text-center mt-4">
+        Supports: JPEG, PNG, WebP (max 20MB)
+      </p>
+    </div>
   )
 }
