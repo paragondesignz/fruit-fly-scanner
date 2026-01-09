@@ -23,10 +23,10 @@ export function ResultCard({ data }: ResultCardProps) {
 
   return (
     <div className="w-full max-w-2xl animate-fade-in-up">
-      {/* Alert Banner for potential Q-fly */}
+      {/* Alert Banner for potential threat species */}
       {isAlert && (
         <div className="bg-red-600 text-white rounded-t-2xl p-4 text-center">
-          <p className="font-bold text-lg">POTENTIAL Q-FLY DETECTED</p>
+          <p className="font-bold text-lg">POTENTIAL THREAT DETECTED</p>
           <p className="text-sm text-red-100">Please report this sighting to MPI immediately</p>
         </div>
       )}
@@ -78,7 +78,7 @@ export function ResultCard({ data }: ResultCardProps) {
               <div>
                 <h4 className="text-sm font-semibold text-red-700 mb-2 flex items-center gap-2">
                   <XCircle className="w-4 h-4" />
-                  Matching Q-fly Features
+                  Matching Threat Features
                 </h4>
                 <ul className="space-y-1">
                   {data.matchingFeatures.map((feature, i) => (
@@ -96,7 +96,7 @@ export function ResultCard({ data }: ResultCardProps) {
               <div>
                 <h4 className="text-sm font-semibold text-green-700 mb-2 flex items-center gap-2">
                   <CheckCircle className="w-4 h-4" />
-                  Features Ruling Out Q-fly
+                  Features Ruling Out Threat
                 </h4>
                 <ul className="space-y-1">
                   {data.excludingFeatures.map((feature, i) => (
@@ -129,13 +129,13 @@ export function ResultCard({ data }: ResultCardProps) {
                 Call MPI: 0800 80 99 66
               </a>
               <a
-                href="https://www.mpi.govt.nz/biosecurity/exotic-pests-and-diseases-in-new-zealand/queensland-fruit-fly/"
+                href="https://www.mpi.govt.nz/biosecurity/pest-and-disease-threats-to-new-zealand/horticultural-pest-and-disease-threats-to-new-zealand/queensland-fruit-fly"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-lg font-medium text-sm transition-colors"
               >
                 <ExternalLink className="w-4 h-4" />
-                MPI Q-fly Info
+                MPI Info
               </a>
             </div>
           </div>

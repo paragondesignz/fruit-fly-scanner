@@ -51,7 +51,7 @@ RECENT DETECTION: Mt Roskill, Auckland
 
 === SPECIES 2: ORIENTAL FRUIT FLY (Bactrocera dorsalis) ===
 KEY FEATURES (any 2+ = ALERT):
-- Body size ~8mm (slightly larger than Q-fly)
+- Body size ~8mm (slightly larger than Queensland Fruit Fly)
 - Mostly dark/black thorax with yellow markings
 - Clear wings with dark costal band
 - Distinct dark "T" shaped marking on abdomen

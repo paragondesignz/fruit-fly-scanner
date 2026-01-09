@@ -76,7 +76,7 @@ function App() {
                 </h2>
                 <div className="grid grid-cols-1 gap-4 text-sm">
                   <div className="p-3 bg-red-50 rounded-lg border border-red-200">
-                    <h3 className="font-semibold text-red-800 mb-1">Queensland Fruit Fly (Q-fly)</h3>
+                    <h3 className="font-semibold text-red-800 mb-1">Queensland Fruit Fly</h3>
                     <p className="text-red-700 text-xs mb-2">Recent detection: Mt Roskill, Auckland</p>
                     <p className="text-slate-600">~7mm, reddish-brown, yellow scutellum, wing bands</p>
                   </div>

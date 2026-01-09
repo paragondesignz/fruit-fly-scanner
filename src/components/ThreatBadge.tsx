@@ -17,14 +17,14 @@ const config: Record<ThreatLevel, {
 }> = {
   ALERT: {
     icon: AlertTriangle,
-    label: 'POTENTIAL Q-FLY',
+    label: 'POTENTIAL THREAT',
     bgColor: 'bg-red-100',
     textColor: 'text-red-800',
     borderColor: 'border-red-300',
   },
   UNLIKELY: {
     icon: CheckCircle,
-    label: 'UNLIKELY Q-FLY',
+    label: 'UNLIKELY THREAT',
     bgColor: 'bg-green-100',
     textColor: 'text-green-800',
     borderColor: 'border-green-300',

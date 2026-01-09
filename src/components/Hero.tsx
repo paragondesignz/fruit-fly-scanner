@@ -19,7 +19,7 @@ export function Hero() {
         <div className="flex flex-wrap justify-center gap-2 text-sm">
           <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-full px-3 py-1">
             <AlertTriangle className="w-3 h-3" />
-            <span>Q-fly</span>
+            <span>Queensland Fruit Fly</span>
           </div>
           <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-full px-3 py-1">
             <AlertTriangle className="w-3 h-3" />

@@ -51,22 +51,17 @@ src/
 
 ## Environment Variables
 
-Create `.env.local`:
-```
-VITE_GEMINI_API_KEY=your_gemini_api_key
-```
-
-For Vercel: Set `VITE_GEMINI_API_KEY` in project environment variables.
+For Vercel: Set `GEMINI_API_KEY` in project environment variables (server-side, no VITE_ prefix needed).
 
 ## Detection Logic
 
 The AI prompt in `geminiService.ts` looks for:
 
-**Q-fly**: ~7mm, reddish-brown, yellow scutellum, wing bands
+**Queensland Fruit Fly**: ~7mm, reddish-brown, yellow scutellum, wing bands
 **Oriental Fruit Fly**: ~8mm, dark thorax, yellow markings, "T" on abdomen
 **SWD**: ~2-3mm, males have dark wing spots, attacks fresh berries
 
-Returns `qflyLikelihood`: ALERT | UNLIKELY | UNCERTAIN
+Returns `threatLikelihood` (internally `qflyLikelihood`): ALERT | UNLIKELY | UNCERTAIN
 
 ## Deployment
 
