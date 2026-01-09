@@ -1,6 +1,15 @@
-import { query, internalMutation } from "./_generated/server";
+import { query, mutation, internalMutation } from "./_generated/server";
 import { v } from "convex/values";
 import { sanitizeString, sanitizeSpeciesName, sanitizeReferenceImages, roundCoordinate } from "./lib/security";
+
+// Generate upload URL for frontend
+export const generateUploadUrl = mutation({
+  args: {},
+  handler: async (ctx) => {
+    return await ctx.storage.generateUploadUrl();
+  },
+});
+
 
 // Internal mutation for storing detections (called from actions)
 export const storeDetectionInternal = internalMutation({

@@ -18,8 +18,8 @@ const genAI = new GoogleGenAI({
 });
 
 interface AnalysisResult {
-  // Primary Asian hornet detection fields
-  asianHornetLikelihood?: "ALERT" | "UNLIKELY" | "UNCERTAIN";
+  // Primary Q-fly detection fields
+  qflyLikelihood?: "ALERT" | "UNLIKELY" | "UNCERTAIN";
   matchingFeatures?: string[];
   excludingFeatures?: string[];
   // Standard fields
@@ -63,21 +63,21 @@ interface AnalysisResult {
 const BIOSECURITY_SCHEMA = {
   type: Type.OBJECT,
   properties: {
-    asianHornetLikelihood: {
+    qflyLikelihood: {
       type: Type.STRING,
       enum: ["ALERT", "UNLIKELY", "UNCERTAIN"],
-      description: "ALERT if 3+ features match or yellow legs + dark thorax. UNLIKELY if clear exclusion. UNCERTAIN if poor image."
+      description: "ALERT if 2+ key features match (size ~7mm, reddish-brown, yellow markings, wing bands). UNLIKELY if clear exclusion. UNCERTAIN if poor image."
     },
     confidence: { type: Type.NUMBER, description: "Confidence 0.0-1.0" },
     matchingFeatures: {
       type: Type.ARRAY,
       items: { type: Type.STRING },
-      description: "Features matching Asian hornet"
+      description: "Features matching Queensland fruit fly"
     },
     excludingFeatures: {
       type: Type.ARRAY,
       items: { type: Type.STRING },
-      description: "Features ruling out Asian hornet"
+      description: "Features ruling out Queensland fruit fly"
     },
     species: { type: Type.STRING, description: "Identified species" },
     commonName: { type: Type.STRING, description: "Common name" },
@@ -96,7 +96,7 @@ const BIOSECURITY_SCHEMA = {
     safetyInfo: { type: Type.STRING, description: "Safety advice" },
     reportingAdvice: { type: Type.STRING, description: "Reporting instructions if ALERT" }
   },
-  required: ["asianHornetLikelihood", "confidence", "species", "reasoning"]
+  required: ["qflyLikelihood", "confidence", "species", "reasoning"]
 };
 
 // Structured output schema for entomology mode
@@ -126,34 +126,38 @@ const ENTOMOLOGY_SCHEMA = {
 };
 
 // Concise prompts - model handles structure via schema
-const BIOSECURITY_PROMPT = `Detect Asian hornet (Vespa velutina / yellow-legged hornet) in this image. This is a BIOSECURITY threat - err on the side of caution.
+const BIOSECURITY_PROMPT = `Detect Queensland fruit fly (Bactrocera tryoni / Q-fly) in this image. This is a BIOSECURITY threat to New Zealand - err on the side of caution.
 
-KEY FEATURES (any 2+ = ALERT):
-- Yellow/orange leg tips (tarsi) on dark legs - THE KEY DISTINGUISHING FEATURE
-- Dark brown/black velvety thorax (NOT yellow striped)
-- Dark abdomen with single yellow-orange band on 4th segment
-- Orange face with dark eyes
-- Size: 20-30mm (larger than common wasps)
+KEY FEATURES OF Q-FLY (any 2+ = ALERT):
+- Body size approximately 7mm (smaller than a common housefly)
+- Reddish-brown coloring with distinctive yellow markings
+- Clear/transparent wings with a distinctive dark brown costal band
+- Yellow scutellum (shield-shaped plate at rear of thorax) - KEY FEATURE
+- Wasp-like narrow "waist" between thorax and abdomen
+- Abdomen with yellow and brown horizontal banding
+- Female: visible ovipositor (pointed egg-laying tube) at rear
 
-NEST FEATURES (any = ALERT):
-- Large papery nest (can reach 80cm)
-- Teardrop/spherical shape
-- Side entrance hole
-- High location (trees, under eaves)
+FRUIT DAMAGE INDICATORS (also = ALERT):
+- Small puncture marks on fruit skin (oviposition marks)
+- Soft spots or discoloration around puncture points
+- Fruit larvae (maggots) visible inside fruit
+- Premature fruit drop on ground
+- Fermented smell from damaged fruit
 
-COMMON LOOKALIKES (NOT Asian hornet):
-- German wasp: Has yellow/black STRIPES on thorax
-- Common wasp: Has distinct yellow/black banding throughout
-- Paper wasp: Much more slender body
-- European hornet: Yellow/brown striped, not dark
-- Bees: Fuzzy/hairy body
+COMMON LOOKALIKES (NOT Q-fly):
+- House fly: Much larger (8-12mm), grey coloring, no wing bands
+- Blow fly: Metallic blue/green coloring, larger body
+- Vinegar fly (Drosophila): Much smaller (2-3mm), different body shape
+- Native fruit flies: Different wing patterns, coloring varies
+- Mediterranean fruit fly: Different wing pattern (broader bands), slightly smaller
 
 CRITICAL RULES:
-1. If you see yellow-tipped legs on a dark-bodied hornet = ALERT
-2. If the thorax appears dark/velvety (not striped) = Consider ALERT
-3. If image quality is poor but subject COULD be Asian hornet = ALERT
-4. When in doubt = ALERT (false positives are acceptable, false negatives are NOT)
-5. Only mark UNLIKELY if you can clearly see features that EXCLUDE Asian hornet`;
+1. If you see reddish-brown body + yellow scutellum + wing bands = ALERT
+2. If size appears ~7mm with fruit fly body shape = Consider ALERT
+3. If image shows fruit damage consistent with Q-fly = ALERT
+4. If image quality is poor but subject COULD be Q-fly = ALERT
+5. When in doubt = ALERT (false positives are acceptable, false negatives are NOT)
+6. Only mark UNLIKELY if you can clearly see features that EXCLUDE Q-fly (e.g., metallic coloring, much larger size)`;
 
 const GENERAL_ENTOMOLOGY_PROMPT = `Identify this insect. Provide species, taxonomy, habitat, behavior, and interesting facts.`;
 
@@ -224,18 +228,23 @@ export const analyzeInsectImage = action({
       // Select system instruction and schema based on mode
       const systemInstruction = analysisMode === "entomology"
         ? `You are an expert entomologist. Identify insects accurately and provide educational information.`
-        : `You are an Asian hornet (Vespa velutina) detection specialist for New Zealand biosecurity. Your job is to protect NZ's native pollinators from this invasive species.
+        : `You are a Queensland fruit fly (Bactrocera tryoni) detection specialist for New Zealand biosecurity. Your job is to protect NZ's horticulture industry from this devastating pest.
 
-CRITICAL: This is a biosecurity screening tool. Your PRIMARY goal is to NEVER miss a real Asian hornet.
-- FALSE POSITIVES are acceptable and expected (we want people to report suspicious insects)
-- FALSE NEGATIVES are DANGEROUS and unacceptable (a missed hornet could establish a colony)
+CONTEXT: A male Q-fly was recently detected in Mt Roskill, Auckland. This is a biosecurity emergency - Q-fly could devastate NZ's $6 billion horticulture industry.
+
+CRITICAL: This is a biosecurity screening tool. Your PRIMARY goal is to NEVER miss a real Q-fly.
+- FALSE POSITIVES are acceptable and expected (we want people to report suspicious flies)
+- FALSE NEGATIVES are DANGEROUS and unacceptable (a missed Q-fly could establish a population)
 
 When analyzing images:
-1. Look for the key features: yellow leg tips, dark velvety thorax, orange band on abdomen
+1. Look for the key features: ~7mm size, reddish-brown color, yellow markings, yellow scutellum, wing bands
 2. If ANY key features are present, lean toward ALERT
-3. Only mark UNLIKELY if you can clearly identify features that EXCLUDE Asian hornet (e.g., clear yellow stripes on thorax = German wasp)
-4. Poor image quality or partial views should bias toward ALERT, not UNLIKELY
-5. When genuinely uncertain, always choose ALERT`;
+3. Also check for fruit damage indicators: puncture marks, soft spots, larvae
+4. Only mark UNLIKELY if you can clearly identify features that EXCLUDE Q-fly (e.g., metallic blue/green = blowfly, much larger size = housefly)
+5. Poor image quality or partial views should bias toward ALERT, not UNLIKELY
+6. When genuinely uncertain, always choose ALERT
+
+REPORTING ADVICE: If ALERT, advise user to call MPI hotline 0800 80 99 66 immediately. Do not kill the fly - capture it if possible for identification.`;
 
       const responseSchema = analysisMode === "entomology" ? ENTOMOLOGY_SCHEMA : BIOSECURITY_SCHEMA;
 
@@ -310,15 +319,15 @@ When analyzing images:
       let analysisResult: AnalysisResult;
       try {
         analysisResult = JSON.parse(jsonString) as AnalysisResult;
-        console.log("Parsed result - species:", analysisResult.species, "likelihood:", analysisResult.asianHornetLikelihood);
+        console.log("Parsed result - species:", analysisResult.species, "likelihood:", analysisResult.qflyLikelihood);
       } catch (parseError) {
         console.error("Failed to parse response. Raw:", responseText.substring(0, 300));
         console.error("Attempted to parse:", jsonString.substring(0, 300));
         throw new Error("Failed to parse AI response - please try again");
       }
 
-      // Determine threat level from Asian hornet likelihood
-      const likelihood = analysisResult.asianHornetLikelihood || "UNCERTAIN";
+      // Determine threat level from Q-fly likelihood
+      const likelihood = analysisResult.qflyLikelihood || "UNCERTAIN";
       let derivedThreatLevel: "safe" | "low" | "medium" | "high" = "safe";
       let derivedIsThreat = false;
 
@@ -343,8 +352,8 @@ When analyzing images:
         anatomicalFeatures: Array.isArray(analysisResult.anatomicalFeatures)
           ? analysisResult.anatomicalFeatures.slice(0, 10)
           : [],
-        // Asian hornet specific fields
-        asianHornetLikelihood: likelihood,
+        // Q-fly specific fields
+        qflyLikelihood: likelihood,
         matchingFeatures: Array.isArray(analysisResult.matchingFeatures)
           ? analysisResult.matchingFeatures
           : [],

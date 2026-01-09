@@ -4,9 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-A biosecurity PWA for detecting Queensland fruit fly (Bactrocera tryoni) using AI image analysis. This is a new standalone application being built using an existing hornet scanner codebase as reference.
+A biosecurity PWA for detecting Queensland fruit fly (Bactrocera tryoni) using AI image analysis. Focused on New Zealand biosecurity with Mt Roskill, Auckland as the current hotspot.
 
-**Target Species**: Queensland fruit fly (Q-fly) - a major agricultural pest in Australia
+**Target Species**: Queensland fruit fly (Q-fly) - Bactrocera tryoni
 **Tech Stack**: React 18 + TypeScript + Vite (frontend), Convex (serverless backend), Gemini 2.5 Flash (AI analysis), TailwindCSS (styling)
 
 ## Commands
@@ -26,50 +26,61 @@ npm run lint         # ESLint with TypeScript rules
 
 ## Architecture
 
-### Backend (Convex)
+### Frontend (`/src`)
 
-All backend logic lives in `/convex/`:
+- **`main.tsx`** - React entry point with Convex provider
+- **`App.tsx`** - Main app component with state management
+- **`components/`** - UI components:
+  - `Hero.tsx` - Header with branding and hotspot info
+  - `UploadArea.tsx` - Drag-drop image upload
+  - `ResultCard.tsx` - Detection results display
+  - `ThreatBadge.tsx` - ALERT/UNLIKELY/UNCERTAIN indicator
+  - `ReferenceImages.tsx` - iNaturalist/Wikimedia comparison images
+  - `PrivacyConsent.tsx` - GDPR-style consent banner
+- **`hooks/useImageAnalysis.ts`** - Orchestrates upload → Convex action → result display
+- **`lib/utils.ts`** - Tailwind class merging utility
 
-- **`actions/analyzeImage.ts`** - Core AI analysis action using Gemini 2.5 Flash with structured output schemas. Contains the biosecurity detection prompts and species identification logic. This is the main file to modify when changing target species.
+### Backend (`/convex`)
+
+- **`actions/analyzeImage.ts`** - Core AI analysis action using Gemini 2.5 Flash with Q-fly specific prompts and structured output schema
 - **`detections.ts`** - Mutations and queries for storing/retrieving detection results
 - **`schema.ts`** - Database schema for the `detections` table
-- **`lib/security.ts`** - Input sanitization, URL validation, magic byte checking for images
-- **`lib/imageSearch.ts`** - Fetches reference images from iNaturalist and Wikimedia Commons APIs
-
-### Frontend
-
-The frontend React app entry point is `/src/main.tsx` (referenced in `index.html`). Uses:
-- TailwindCSS for styling (config in `tailwind.config.js`)
-- Lucide React for icons
-- Convex React hooks for real-time data
+- **`lib/security.ts`** - Input sanitization, URL validation, magic byte checking
+- **`lib/imageSearch.ts`** - Fetches reference images from iNaturalist and Wikimedia Commons
 
 ### Key Data Flow
 
-1. User uploads image → Convex storage
-2. `analyzeInsectImage` action fetches image, validates magic bytes, sends to Gemini with structured schema
-3. AI returns JSON matching `BIOSECURITY_SCHEMA` or `ENTOMOLOGY_SCHEMA`
-4. Result stored in `detections` table via `storeDetectionInternal`
+1. User uploads image → Convex storage via `generateUploadUrl` mutation
+2. `analyzeInsectImage` action validates image, sends to Gemini with Q-fly biosecurity prompt
+3. AI returns JSON matching `BIOSECURITY_SCHEMA` with `qflyLikelihood` field
+4. Result stored in `detections` table, frontend subscribes via `getDetectionWithImage` query
 5. Reference images fetched async from iNaturalist/Wikimedia (fire-and-forget pattern)
 
 ## Environment Variables
 
-Required in Convex dashboard:
+### Convex Dashboard
 - `GEMINI_API_KEY` - Google Gemini API key
 
-## Building the Q-fly Scanner
+### Local Development (`.env.local`)
+- `VITE_CONVEX_URL` - Convex deployment URL
 
-The existing codebase contains a hornet scanner as reference. Key files to adapt:
+## Q-fly Detection Features
 
-1. **`convex/actions/analyzeImage.ts`** - Replace `BIOSECURITY_SCHEMA` and `BIOSECURITY_PROMPT` with Q-fly identification:
-   - Key features: 7mm body, reddish-brown with yellow markings, distinctive wing patterns
-   - Common lookalikes: native fruit flies, vinegar flies, other Bactrocera species
+The AI prompt in `convex/actions/analyzeImage.ts` looks for:
 
-2. **`src/`** - Frontend needs to be created (referenced in `index.html` but directory doesn't exist)
+**Positive indicators (any 2+ = ALERT):**
+- Body ~7mm (smaller than housefly)
+- Reddish-brown with yellow markings
+- Clear wings with brown costal band
+- Yellow scutellum (shield on thorax)
+- Wasp-like narrow waist
 
-3. **Assets** - Replace `hornet-scanner.svg`, update `index.html` title/meta, create new PWA icons
-
-4. **Reference images** - `lib/imageSearch.ts` dynamically fetches from iNaturalist/Wikimedia by species name
+**Fruit damage indicators:**
+- Puncture marks on fruit skin
+- Soft spots around punctures
+- Larvae in fruit
 
 ## Deployment
 
-Configured for Vercel (`vercel.json`) and Netlify (`netlify.toml` mentioned in README). Security headers are set in `vite.config.ts` for preview mode.
+- **Frontend**: Vercel (`vercel.json` configured)
+- **Backend**: Convex (`npx convex deploy`)
