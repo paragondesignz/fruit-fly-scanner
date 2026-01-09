@@ -1,5 +1,4 @@
 import { ThreatBadge } from './ThreatBadge'
-import { ReferenceImages } from './ReferenceImages'
 import { Phone, ExternalLink, CheckCircle, XCircle, Info } from 'lucide-react'
 
 interface AnalysisData {
@@ -12,11 +11,6 @@ interface AnalysisData {
   commonName?: string
   scientificName?: string
   reportingAdvice?: string
-  referenceImages?: Array<{
-    url: string
-    description: string
-    source?: string
-  }>
 }
 
 interface ResultCardProps {
@@ -116,13 +110,6 @@ export function ResultCard({ data }: ResultCardProps) {
             )}
           </div>
         </div>
-
-        {/* Reference Images */}
-        {data.referenceImages && data.referenceImages.length > 0 && (
-          <div className="p-6 border-b border-slate-100">
-            <ReferenceImages images={data.referenceImages} />
-          </div>
-        )}
 
         {/* Reporting Section (for ALERT or UNCERTAIN) */}
         {(isAlert || isUncertain) && (

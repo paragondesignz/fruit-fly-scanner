@@ -9,16 +9,26 @@ export function Hero() {
         </div>
 
         <h1 className="text-4xl md:text-5xl font-bold mb-4">
-          Q-fly Scanner
+          Fruit Fly Scanner
         </h1>
 
         <p className="text-xl md:text-2xl text-white/90 mb-4 max-w-2xl mx-auto">
-          AI-powered Queensland fruit fly detection for New Zealand biosecurity
+          AI-powered detection of biosecurity threat species for New Zealand
         </p>
 
-        <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-full px-4 py-2 text-sm">
-          <AlertTriangle className="w-4 h-4" />
-          <span>Hotspot: Mt Roskill, Auckland</span>
+        <div className="flex flex-wrap justify-center gap-2 text-sm">
+          <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-full px-3 py-1">
+            <AlertTriangle className="w-3 h-3" />
+            <span>Q-fly</span>
+          </div>
+          <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-full px-3 py-1">
+            <AlertTriangle className="w-3 h-3" />
+            <span>Oriental Fruit Fly</span>
+          </div>
+          <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-full px-3 py-1">
+            <AlertTriangle className="w-3 h-3" />
+            <span>Spotted-wing Drosophila</span>
+          </div>
         </div>
       </div>
     </header>

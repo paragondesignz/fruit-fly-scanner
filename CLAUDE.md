@@ -4,83 +4,74 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-A biosecurity PWA for detecting Queensland fruit fly (Bactrocera tryoni) using AI image analysis. Focused on New Zealand biosecurity with Mt Roskill, Auckland as the current hotspot.
+A biosecurity PWA for detecting fruit fly threat species using AI image analysis. Focused on New Zealand biosecurity.
 
-**Target Species**: Queensland fruit fly (Q-fly) - Bactrocera tryoni
-**Tech Stack**: React 18 + TypeScript + Vite (frontend), Convex (serverless backend), Gemini 2.5 Flash (AI analysis), TailwindCSS (styling)
+**Target Species** (all reportable to MPI):
+1. Queensland Fruit Fly (Bactrocera tryoni)
+2. Oriental Fruit Fly (Bactrocera dorsalis)
+3. Spotted-wing Drosophila (Drosophila suzukii)
+
+**Tech Stack**: React 18 + TypeScript + Vite + TailwindCSS + Google Gemini 2.5 Flash
 
 ## Commands
 
 ```bash
-# Development
-npm run dev          # Start Vite dev server (port 5173)
-npx convex dev       # Start Convex backend (run in separate terminal)
-
-# Build & Preview
-npm run build        # TypeScript check + Vite production build
-npm run preview      # Preview production build locally
-
-# Lint
-npm run lint         # ESLint with TypeScript rules
+npm run dev      # Start Vite dev server (port 5173)
+npm run build    # TypeScript check + Vite production build
+npm run preview  # Preview production build locally
+npm run lint     # ESLint with TypeScript rules
 ```
 
 ## Architecture
 
-### Frontend (`/src`)
+Simple client-side app with direct Gemini API calls:
 
-- **`main.tsx`** - React entry point with Convex provider
-- **`App.tsx`** - Main app component with state management
-- **`components/`** - UI components:
-  - `Hero.tsx` - Header with branding and hotspot info
-  - `UploadArea.tsx` - Drag-drop image upload
-  - `ResultCard.tsx` - Detection results display
-  - `ThreatBadge.tsx` - ALERT/UNLIKELY/UNCERTAIN indicator
-  - `ReferenceImages.tsx` - iNaturalist/Wikimedia comparison images
-  - `PrivacyConsent.tsx` - GDPR-style consent banner
-- **`hooks/useImageAnalysis.ts`** - Orchestrates upload → Convex action → result display
-- **`lib/utils.ts`** - Tailwind class merging utility
+```
+src/
+├── main.tsx              # React entry point
+├── App.tsx               # Main app with state management
+├── index.css             # Tailwind imports
+├── components/
+│   ├── Hero.tsx          # Header with species badges
+│   ├── UploadArea.tsx    # Drag-drop image upload
+│   ├── ResultCard.tsx    # Detection results display
+│   └── ThreatBadge.tsx   # ALERT/UNLIKELY/UNCERTAIN indicator
+├── hooks/
+│   └── useImageAnalysis.ts   # Orchestrates file → Gemini → result
+├── services/
+│   └── geminiService.ts      # Direct Gemini API calls with biosecurity prompt
+└── lib/
+    └── utils.ts          # Tailwind class merging
+```
 
-### Backend (`/convex`)
+## Key Files
 
-- **`actions/analyzeImage.ts`** - Core AI analysis action using Gemini 2.5 Flash with Q-fly specific prompts and structured output schema
-- **`detections.ts`** - Mutations and queries for storing/retrieving detection results
-- **`schema.ts`** - Database schema for the `detections` table
-- **`lib/security.ts`** - Input sanitization, URL validation, magic byte checking
-- **`lib/imageSearch.ts`** - Fetches reference images from iNaturalist and Wikimedia Commons
-
-### Key Data Flow
-
-1. User uploads image → Convex storage via `generateUploadUrl` mutation
-2. `analyzeInsectImage` action validates image, sends to Gemini with Q-fly biosecurity prompt
-3. AI returns JSON matching `BIOSECURITY_SCHEMA` with `qflyLikelihood` field
-4. Result stored in `detections` table, frontend subscribes via `getDetectionWithImage` query
-5. Reference images fetched async from iNaturalist/Wikimedia (fire-and-forget pattern)
+- **`src/services/geminiService.ts`** - Contains the biosecurity detection prompt and Gemini API integration. Modify this to change detection criteria.
+- **`src/components/ResultCard.tsx`** - Displays analysis results with MPI reporting links
 
 ## Environment Variables
 
-### Convex Dashboard
-- `GEMINI_API_KEY` - Google Gemini API key
+Create `.env.local`:
+```
+VITE_GEMINI_API_KEY=your_gemini_api_key
+```
 
-### Local Development (`.env.local`)
-- `VITE_CONVEX_URL` - Convex deployment URL
+For Vercel: Set `VITE_GEMINI_API_KEY` in project environment variables.
 
-## Q-fly Detection Features
+## Detection Logic
 
-The AI prompt in `convex/actions/analyzeImage.ts` looks for:
+The AI prompt in `geminiService.ts` looks for:
 
-**Positive indicators (any 2+ = ALERT):**
-- Body ~7mm (smaller than housefly)
-- Reddish-brown with yellow markings
-- Clear wings with brown costal band
-- Yellow scutellum (shield on thorax)
-- Wasp-like narrow waist
+**Q-fly**: ~7mm, reddish-brown, yellow scutellum, wing bands
+**Oriental Fruit Fly**: ~8mm, dark thorax, yellow markings, "T" on abdomen
+**SWD**: ~2-3mm, males have dark wing spots, attacks fresh berries
 
-**Fruit damage indicators:**
-- Puncture marks on fruit skin
-- Soft spots around punctures
-- Larvae in fruit
+Returns `qflyLikelihood`: ALERT | UNLIKELY | UNCERTAIN
 
 ## Deployment
 
-- **Frontend**: Vercel (`vercel.json` configured)
-- **Backend**: Convex (`npx convex deploy`)
+Deployed via Vercel. Push to main branch triggers automatic deployment.
+
+```bash
+vercel --prod    # Manual production deploy
+```
