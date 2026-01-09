@@ -1,0 +1,5 @@
+{
+  "name": "EntomoLens - Insect Identifier",
+  "description": "Upload a photo of any insect to instantly identify it using AI. Get detailed information including scientific name, habitat, and danger level.",
+  "requestFramePermissions": []
+}
