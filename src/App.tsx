@@ -1,4 +1,6 @@
 import { useState, useCallback } from 'react'
+import { useQuery } from 'convex/react'
+import { api } from '../convex/_generated/api'
 import { AlertTriangle, ExternalLink, Shield, Menu, X, Camera, Bug } from 'lucide-react'
 import { UploadArea } from './components/UploadArea'
 import { ResultCard } from './components/ResultCard'
@@ -11,6 +13,9 @@ function App() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const { isLoading, error, result, analyzeFile, reset } = useImageAnalysis()
+
+  // Fetch species data from Convex
+  const species = useQuery(api.species.list)
 
   const handleImageSelect = useCallback(async (file: File) => {
     const imageUrl = URL.createObjectURL(file)
@@ -61,24 +66,22 @@ function App() {
     </div>
   )
 
-  // Fruit Fly Examples Strip - using colored boxes as placeholders
+  // Fruit Fly Examples Strip - using dynamic species data
   const FruitFlyStrip = () => (
     <div className="w-full overflow-hidden bg-gradient-to-r from-amber-600 via-orange-500 to-red-600" aria-label="Fruit fly threat species">
-      <div className="flex items-center justify-center gap-4 py-3 px-4">
-        <div className="flex items-center gap-2 text-white/90 text-xs font-medium">
-          <AlertTriangle className="w-3 h-3" />
-          <span>Queensland Fruit Fly</span>
-        </div>
-        <span className="text-white/40">|</span>
-        <div className="flex items-center gap-2 text-white/90 text-xs font-medium">
-          <AlertTriangle className="w-3 h-3" />
-          <span>Oriental Fruit Fly</span>
-        </div>
-        <span className="text-white/40">|</span>
-        <div className="flex items-center gap-2 text-white/90 text-xs font-medium">
-          <AlertTriangle className="w-3 h-3" />
-          <span>Spotted-wing Drosophila</span>
-        </div>
+      <div className="flex items-center justify-center gap-4 py-3 px-4 flex-wrap">
+        {species?.map((s, index) => (
+          <div key={s._id} className="flex items-center gap-2">
+            {index > 0 && <span className="text-white/40 hidden sm:inline">|</span>}
+            <div className="flex items-center gap-2 text-white/90 text-xs font-medium">
+              <AlertTriangle className="w-3 h-3" />
+              <span>{s.abbreviation || s.commonName}</span>
+            </div>
+          </div>
+        ))}
+        {!species && (
+          <div className="text-white/70 text-xs">Loading species...</div>
+        )}
       </div>
     </div>
   )
@@ -324,42 +327,47 @@ function App() {
               MPI Biosecurity Threat Species
             </h3>
 
-            <div className="card p-4">
-              <div className="flex items-start gap-3">
-                <div className="w-10 h-10 bg-[rgba(239,68,68,0.12)] rounded-lg flex items-center justify-center flex-shrink-0 border border-[rgba(239,68,68,0.2)]">
-                  <AlertTriangle className="w-5 h-5 text-[#f87171]" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h4 className="font-semibold text-slate-100 text-sm mb-1">Queensland Fruit Fly</h4>
-                  <p className="text-xs text-[#f87171] mb-1">Recent detection: Mt Roskill, Auckland</p>
-                  <p className="text-xs text-slate-400">~7mm, reddish-brown, yellow scutellum, wing bands</p>
-                </div>
-              </div>
-            </div>
+            {species?.map((s) => {
+              // Map icon color to actual color values
+              const colorMap: Record<string, { bg: string; border: string; text: string }> = {
+                'red-500': { bg: 'rgba(239,68,68,0.12)', border: 'rgba(239,68,68,0.2)', text: '#f87171' },
+                'amber-500': { bg: 'rgba(245,158,11,0.12)', border: 'rgba(245,158,11,0.2)', text: '#fbbf24' },
+                'orange-500': { bg: 'rgba(251,146,60,0.15)', border: 'rgba(251,146,60,0.3)', text: '#fdba74' },
+                'yellow-500': { bg: 'rgba(234,179,8,0.12)', border: 'rgba(234,179,8,0.2)', text: '#facc15' },
+              }
+              const colors = colorMap[s.display.iconColor] || colorMap['orange-500']
 
-            <div className="card p-4">
-              <div className="flex items-start gap-3">
-                <div className="w-10 h-10 bg-[rgba(245,158,11,0.12)] rounded-lg flex items-center justify-center flex-shrink-0 border border-[rgba(245,158,11,0.2)]">
-                  <AlertTriangle className="w-5 h-5 text-[#fbbf24]" />
+              return (
+                <div key={s._id} className="card p-4">
+                  <div className="flex items-start gap-3">
+                    <div
+                      className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
+                      style={{ backgroundColor: colors.bg, borderWidth: 1, borderColor: colors.border }}
+                    >
+                      <AlertTriangle className="w-5 h-5" style={{ color: colors.text }} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-semibold text-slate-100 text-sm mb-1">{s.commonName}</h4>
+                      {s.biosecurity.recentDetections && (
+                        <p className="text-xs mb-1" style={{ color: colors.text }}>
+                          Recent detection: {s.biosecurity.recentDetections}
+                        </p>
+                      )}
+                      <p className="text-xs text-slate-400">
+                        {s.characteristics.sizeRange}, {s.characteristics.primaryColor}, {s.characteristics.keyFeatures.slice(0, 2).join(', ')}
+                      </p>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <h4 className="font-semibold text-slate-100 text-sm mb-1">Oriental Fruit Fly</h4>
-                  <p className="text-xs text-slate-400">~8mm, dark thorax, yellow markings, "T" marking on abdomen</p>
-                </div>
-              </div>
-            </div>
+              )
+            })}
 
-            <div className="card p-4">
-              <div className="flex items-start gap-3">
-                <div className="w-10 h-10 bg-[rgba(251,146,60,0.15)] rounded-lg flex items-center justify-center flex-shrink-0 border border-[rgba(251,146,60,0.3)]">
-                  <AlertTriangle className="w-5 h-5 text-[#fdba74]" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h4 className="font-semibold text-slate-100 text-sm mb-1">Spotted-wing Drosophila (SWD)</h4>
-                  <p className="text-xs text-slate-400">~2-3mm, males have dark wing spots, attacks fresh berries</p>
-                </div>
+            {!species && (
+              <div className="card p-4 text-center">
+                <div className="spinner-small mx-auto mb-2" />
+                <p className="text-xs text-slate-500">Loading species data...</p>
               </div>
-            </div>
+            )}
           </section>
 
           {/* Report Section */}
